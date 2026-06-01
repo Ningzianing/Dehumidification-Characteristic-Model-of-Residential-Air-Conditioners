@@ -122,7 +122,7 @@ class cooling_aircon():
 if __name__ == "__main__":
     # construct the model 
     oneday_test_data = r"data\0701data_cooling.csv"
-    ac = cooling_aircon(500,2200,3300,115,425,960,906,2160, oneday_test_data, construct_model=False) 
+    ac = cooling_aircon(500,2200,3300,115,425,960,906,2160, oneday_test_data, construct_model=True) 
 
     P, Lsensible_apply, Q_latent_cal, T_evp_apply, T_cnd_apply = ac.ac_output(476, 25.458, 0.015851711, 28.65173333, 576) 
 

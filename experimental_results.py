@@ -2,11 +2,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
 
 import reheat_dehumidification as rm
 import cooling_dehumidification as cm
 
-def plot_onedayfitting(df_test, P_lst,legend_loc):
+def plot_onedayfitting(df_test, P_lst, legend_loc):
     L_sensible_array = np.array(df_test['L_sensible'].values, dtype = float)
     L_latent_array = np.array(df_test['L_latent'].values, dtype = float)
     P_measured = df_test['Totalenergy'].copy()
@@ -14,70 +16,87 @@ def plot_onedayfitting(df_test, P_lst,legend_loc):
     fig, ax1 = plt.subplots(figsize=(18, 5))
     ax2 = ax1.twinx()
     width = 0.0055
-    ax2.bar(df_test['Time'], L_latent_array, width=width, 
-            label='measured latent heat', color='skyblue', alpha=0.39)
-    ax2.bar(df_test['Time'], L_sensible_array, width=width, 
-            bottom=L_latent_array, label='measured sensible heat', color='lightcoral', alpha=0.39)
+    
+    bar1 = ax2.bar(df_test['Time'], L_latent_array, width=width, 
+                   label='measured latent heat', color='skyblue', alpha=0.39)
+    bar2 = ax2.bar(df_test['Time'], L_sensible_array, width=width, 
+                   bottom=L_latent_array, label='measured sensible heat', color='lightcoral', alpha=0.39)
 
     ax2.set_ylabel('Total Heat (W)', fontsize=18)
-    # ax2.legend(loc='lower right', fontsize=16)
+    ax2.set_ylim(0, 2000)
     ax2.tick_params(axis='y', which='major', labelsize=14)
-    ax2.set_ylim(0,2000)
 
     line_zorder = 10 
-    ax1.plot(df_test['Time'], P_measured, label='Measured', 
-            color='black', linewidth=2.2, zorder=line_zorder) 
-    ax1.plot(df_test['Time'], P_lst, label='M.3 (Proposed)', 
-            color='red', linewidth=2.2, zorder=line_zorder)
+    l1, = ax1.plot(df_test['Time'], P_measured, label='Measured', 
+                   color='black', linewidth=2.2, zorder=line_zorder) 
+    l2, = ax1.plot(df_test['Time'], P_lst, label='M.3 (Proposed)', 
+                   color='red', linewidth=2.2, zorder=line_zorder)
+    
     ax1.set_xlabel('Time (hh:mm)', fontsize=18)
     ax1.set_ylabel('Power Consumption (W)', fontsize=18)
-    ax1.legend(loc='lower left', fontsize=16)
+    ax1.set_ylim(0, 500)
+    
     ax1.set_zorder(ax2.get_zorder() + 1)
     ax1.patch.set_visible(False) 
-    ax1.set_ylim(0,500)
+    
     ax1.xaxis.set_major_locator(mdates.HourLocator(interval=2))
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
     ax1.grid(True, linestyle='--', alpha=0.3, zorder=0) 
     ax1.tick_params(axis='both', which='major', labelsize=14)
-
-    handles1, labels1 = ax1.get_legend_handles_labels()
-    handles2, labels2 = ax2.get_legend_handles_labels()
-    all_handles = handles1 + handles2
-    all_labels = labels1 + labels2
-    ax1.legend(all_handles, all_labels, 
-               loc=legend_loc, 
-               ncol=2, 
-               fontsize=16,
-               columnspacing=1.0, 
-               handletextpad=0.5, 
-               frameon=True)
-    plt.subplots_adjust(top=0.8)
+    x_offset = 0.04
+    leg1 = ax1.legend(handles=[l1, l2], 
+                      loc='upper left', 
+                      bbox_to_anchor=(x_offset, 0.98), 
+                      ncol=2, 
+                      fontsize=16, 
+                      frameon=False)
+    leg2 = ax1.legend(handles=[bar1, bar2], 
+                      loc='upper left', 
+                      bbox_to_anchor=(x_offset, 0.91), 
+                      ncol=2, 
+                      fontsize=16, 
+                      frameon=False)
+    ax1.add_artist(leg1)
     plt.tight_layout()
     plt.show()
 
-def plot_onedayfitting_latent(df_test, latent_lst,legend_loc):
+def plot_onedayfitting_latent(df_test, latent_lst, legend_loc):
     L_sensible_array = np.array(df_test['L_sensible'].values, dtype = float)
     L_latent_array = np.array(df_test['L_latent'].values, dtype = float)
     L_latent_measured = df_test['L_latent'].copy()
     fig, ax1 = plt.subplots(figsize=(18, 5))
     width = 0.0055
     line_zorder = 10 
-    ax1.bar(df_test['Time'], L_latent_array, width=width, 
-            label='measured latent heat', color='skyblue', alpha=0.39, zorder=1)
-    ax1.bar(df_test['Time'], L_sensible_array, width=width, 
-            bottom=L_latent_array, label='measured sensible heat', color='lightcoral', alpha=0.39, zorder=1)
-    ax1.plot(df_test['Time'], L_latent_measured, label='Measured', 
-            color='black', linewidth=2.2, zorder=line_zorder)
-    ax1.plot(df_test['Time'], latent_lst, label='M.3 (Proposed)', 
-            color='red', linewidth=2.2, zorder=line_zorder)
+    bar1 = ax1.bar(df_test['Time'], L_latent_array, width=width, 
+                   label='measured latent heat', color='skyblue', alpha=0.39, zorder=1)
+    bar2 = ax1.bar(df_test['Time'], L_sensible_array, width=width, 
+                   bottom=L_latent_array, label='measured sensible heat', color='lightcoral', alpha=0.39, zorder=1)
+    l1, = ax1.plot(df_test['Time'], L_latent_measured, label='Measured', 
+                   color='black', linewidth=2.2, zorder=line_zorder)
+    l2, = ax1.plot(df_test['Time'], latent_lst, label='M.3 (Proposed)', 
+                   color='red', linewidth=2.2, zorder=line_zorder)
     ax1.set_xlabel('Time (hh:mm)', fontsize=18)
     ax1.set_ylabel('Heat (W)', fontsize=18) 
     ax1.xaxis.set_major_locator(mdates.HourLocator(interval=2))
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
     ax1.grid(True, linestyle='--', alpha=0.3, zorder=0) 
     ax1.tick_params(axis='both', which='major', labelsize=14)
-    ax1.set_ylim(0,2000)
-    ax1.legend(loc = legend_loc, fontsize=16, ncol=2) 
+    ax1.set_ylim(0, 2000)
+    x_offset = 0.04
+    leg1 = ax1.legend(handles=[l1, l2], 
+                      loc='upper left', 
+                      bbox_to_anchor=(x_offset, 0.98), 
+                      ncol=2, 
+                      fontsize=16, 
+                      frameon=False)
+    
+    leg2 = ax1.legend(handles=[bar1, bar2], 
+                      loc='upper left', 
+                      bbox_to_anchor=(x_offset, 0.91), 
+                      ncol=2, 
+                      fontsize=16, 
+                      frameon=False)
+    ax1.add_artist(leg1)
     plt.tight_layout()
     plt.show()
 
@@ -159,8 +178,8 @@ def plot_parity(P_totals, y_test, color, y_upper):
     plt.grid(True, linestyle=':', alpha=0.6)
     plt.show()
 
-df_test_reheat = df_test1[df_test1['mode'] == 'reheat'].copy().reset_index(drop=True)
-df_test_cooling = df_test1[df_test1['mode'] == 'cooling'].copy().reset_index(drop=True)
+df_test_reheat = df_test1[(df_test1['mode'] == 'reheat') & (df_test1['Time'].dt.strftime('%Y/%m/%d') != '2025/06/15')].copy().reset_index(drop=True)
+df_test_cooling = df_test1[(df_test1['mode'] == 'cooling') & (df_test1['Time'].dt.strftime('%Y/%m/%d') != '2025/07/01')].copy().reset_index(drop=True)
 y_test_reheat_P = df_test_reheat['Totalenergy']
 y_test_cooling_P = df_test_cooling['Totalenergy']
 y_test_reheat_latent = df_test_reheat['L_latent']
@@ -199,3 +218,14 @@ plot_parity(P_totals_cooling, y_test_cooling_P, 'red', 800)
 plot_parity(L_latents_reheat, y_test_reheat_latent, 'red', 1500)
 plot_parity(L_latents_cooling, y_test_cooling_latent, 'red', 1000)
 
+print('----------------------Power Consumption-----------------------')
+print("RMSE(reheat): ", np.sqrt(mean_squared_error(np.array(P_totals_reheat, dtype=float), np.array(y_test_reheat_P.values, dtype=float))))
+print("MAE(reheat): ", mean_absolute_error(np.array(P_totals_reheat, dtype=float), np.array(y_test_reheat_P.values, dtype=float)))
+print("RMSE(cooling): ", np.sqrt(mean_squared_error(np.array(P_totals_cooling, dtype=float), np.array(y_test_cooling_P.values, dtype=float))))
+print("MAE(cooling): ", mean_absolute_error(np.array(P_totals_cooling, dtype=float), np.array(y_test_cooling_P.values, dtype=float)))
+
+print('----------------------Latent heat removal-----------------------')
+print("RMSE(reheat): ", np.sqrt(mean_squared_error(np.array(L_latents_reheat,dtype=float), np.array(y_test_reheat_latent.values,dtype=float))))
+print("MAE(reheat): ", mean_absolute_error(np.array(L_latents_reheat,dtype=float), np.array(y_test_reheat_latent.values,dtype=float)))
+print("RMSE(cooling): ", np.sqrt(mean_squared_error(np.array(L_latents_cooling,dtype=float), np.array(y_test_cooling_latent.values,dtype=float))))
+print("MAE(cooling): ", mean_absolute_error(np.array(L_latents_cooling,dtype=float), np.array(y_test_cooling_latent.values,dtype=float)))

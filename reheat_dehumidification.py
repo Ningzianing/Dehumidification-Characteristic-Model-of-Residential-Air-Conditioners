@@ -70,6 +70,7 @@ class reheat_aircon():
 
         @use_named_args(space)
         def objective(**params):
+
             mse_all = []
             for i in range(20):
                 df_shuffled = df.sample(frac=1).reset_index(drop=True)
@@ -83,6 +84,8 @@ class reheat_aircon():
                 gamma_reheat = params['gamma_reheat']
                 delta_t_a = params['delta_t_a']
                 delta_t_b = params['delta_t_b']
+
+                print(f"Testing parameters: gamma_cooled={gamma_cooled},BF={BF}, gamma_reheat={gamma_reheat}, delta_t_a={delta_t_a}, delta_t_b={delta_t_b}")
 
                 M_out_solutions = []
                 T_evp_solutions = []
@@ -143,7 +146,7 @@ class reheat_aircon():
                             self.Min_a, self.Min_b, gamma_cooled, gamma_reheat, BF, a, b, poly_func, P_c, delta_t_a, delta_t_b, P_tolerance=15
                         )
                         if L_latent_cal < 0 or L_latent_cal > df_second_half["L_total"].iloc[e] or SHF < 0 or T_evp_apply > T_cnd_apply:
-                            print("Physically unrealistic values occurred: ", "L_latent_cal, T_evp_apply, T_cnd_apply:", L_latent_cal, T_evp_apply, T_cnd_apply)
+                            # print("Physically unrealistic values occurred: ", "L_latent_cal, T_evp_apply, T_cnd_apply:", L_latent_cal, T_evp_apply, T_cnd_apply)
                             P_totals.append(PUNISHMENT_VALUE)
                             L_latents.append(PUNISHMENT_VALUE)
                         else:
@@ -151,7 +154,7 @@ class reheat_aircon():
                             L_latents.append(L_latent_cal)
                         
                     except Exception as err:
-                        print(f"Warning: Row {e} failed to solve. Applying punishment. Error: {err}")
+                        # print(f"Warning: Row {e} failed to solve. Applying punishment. Error: {err}")
 
                         P_totals.append(PUNISHMENT_VALUE)
                         L_latents.append(PUNISHMENT_VALUE) 
@@ -246,7 +249,7 @@ class reheat_aircon():
 
 if __name__ == "__main__":
     experiment_data = r"data\0615data_reheat.csv"
-    ac = reheat_aircon(500,2200,3300,115,425,960,906,2160,experiment_data, construct_model= False) 
+    ac = reheat_aircon(500,2200,3300,115,425,960,906,2160,experiment_data, construct_model= True) 
     P, T_evp_apply, T_cnd_apply, L_latent_cal, SHF = ac.ac_output(250,0.010613295862459, 24.2, 25.1, 759)
     print(P, T_evp_apply, T_cnd_apply, L_latent_cal, SHF)
 

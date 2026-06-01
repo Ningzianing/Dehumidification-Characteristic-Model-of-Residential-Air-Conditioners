@@ -39,7 +39,7 @@ def get_dew_point(omega, P=101325):  # Given absolute humidity, output dew point
         t_solution = res.x
         residual = res.fun 
     else:
-        print("get_dew_point fails to output the minimum value")
+        # print("get_dew_point fails to output the minimum value")
         t_solution = np.nan
     return t_solution 
 
@@ -220,9 +220,10 @@ def solve_P(P_initial, omega_room, Troom, T_out, L_total, Min_a, Min_b, gamma_co
     while continuecal == True:
         omega_evp, T_evp, T_cndin, L_latent = solve_main_eqs(M_in, omega_room, Troom, T_out, L_total, P, gamma_cooled, gamma_reheat, BF, a, b, delta_t_a, delta_t_b, T_evp_tolerance, T_evp_max_iterate) 
         L_cndin = M_in*(1-gamma_cooled)*(1-BF)*1005*(T_cndin - Troom) + M_in*gamma_cooled*gamma_reheat*(1-BF)*1005*(T_cndin-T_evp)
-
         L_total_compressor = L_total + L_cndin
+
         R_dehumid = poly_func(L_total_compressor)
+        
         P_total = (L_total_compressor / ((T_evp+273.15)*R_dehumid/(T_cndin-T_evp))) + P_c
         P_total = max(min(P_total, P_max), P_min)
 
@@ -233,8 +234,8 @@ def solve_P(P_initial, omega_room, Troom, T_out, L_total, Min_a, Min_b, gamma_co
             P_new = (P + P_total)/2
             P = max(min(P_new, P_max), P_min)
             iterate += 1
-        if iterate >= P_max_iterate:
-            print("L_total:", L_total, "gamma_cooled, gamma_reheat, BF:", gamma_cooled, gamma_reheat, BF, "solve_P does not converge")
+        # if iterate >= P_max_iterate:
+        #     print("L_total:", L_total, "gamma_cooled, gamma_reheat, BF:", gamma_cooled, gamma_reheat, BF, "solve_P does not converge")
 
     return max(min((P + P_total)/2, P_max), P_min), T_evp, T_cndin, L_latent, (L_total - L_latent) / L_total 
 
